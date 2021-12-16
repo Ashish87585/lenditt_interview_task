@@ -2,6 +2,7 @@ const express = require("express");
 const passport = require("passport")
 const dotenv = require("dotenv");
 const app = express();
+const cookieParser = require("cookie-parser");
 
 //config
 dotenv.config({ path: "config/config.env" });
@@ -10,6 +11,7 @@ require("./auth/passport");
 
 const port = 8080;
 app.use(passport.initialize());
+app.use(cookieParser());
 app.use(express.json());
 
 require("./db/database");

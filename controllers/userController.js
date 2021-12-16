@@ -2,12 +2,21 @@ const db = require("../db/database");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Sequelize = require("sequelize");
+const sendToken = require("../middleware/utils");
 const Op = Sequelize.Op;
 
 const register = async (req, res) => {
   const salt = bcrypt.genSaltSync(10);
   try {
     const userData = req.body;
+
+    if (!userData.name || !userData.mobile || !userData.email || !userData.password) {
+      return res.json({
+        success: false,
+        message: "All field are required"
+      })
+    }
+
     if (userData.password) {
       userData.password = bcrypt.hashSync(String(userData.password), salt);
     }
@@ -76,13 +85,8 @@ const login = async (req, res) => {
       process.env.JWT_SECRET
     );
 
-    console.log("process.env.JWT_SECRET", process.env.JWT_SECRET);
+    sendToken(jwtToken, user, res)
 
-    return res.json({
-      success: true,
-      message: "Login success",
-      jwtToken,
-    });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -115,11 +119,14 @@ const getUser = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    req.logout();
-    delete req.session;
-    return res.status(201).json({
+    await res.cookie("token", null, {
+      expires: new Date(Date.now()),
+      httpOnly: true,
+    });
+
+    res.status(200).json({
       success: true,
-      message: "logout success",
+      message: "Logged out success",
     });
   } catch (error) {
     console.log(error);
